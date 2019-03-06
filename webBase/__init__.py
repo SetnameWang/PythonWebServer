@@ -1,4 +1,4 @@
-﻿class webServer:
+class webServer:
     def __init__(self, address, port, debug):
         self.address = address
         self.port = port
@@ -28,26 +28,38 @@
     def startServer(self):
         import socket
         import time
+        import threading
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((self.address, self.port))
         sock.listen(64)
         print(self.info.format(time = time.asctime(time.localtime(time.time())), type = 'info', info = 'Server listen on ' + self.address + ':' + str(self.port)))
+        connPool = []
         while True:
             conn, addr = sock.accept()
-            request = str(conn.recv(1024),'utf-8')
-            if self.debug == True: print(self.info.format(time = time.asctime(time.localtime(time.time())), type = 'Debug', info = str(request)))
-            try:
-                handShake = self.unpackHandshake(request)
-                message = self.message(handShake)
-                content = 'HTTP/1.1 {stateCode} {state}\r\nDate: {date}{others}\r\n\r\n'.format(stateCode = message['stateCode'], state = message['state'], date = message['date'], others = message['others'])
-                content = bytes(content, encoding='utf-8')
-                content = content + message['bodyMessage']
-            except: 
-                if self.debug == True: print(self.info.format(time = time.asctime(time.localtime(time.time())), type = 'Debug', info = 'Bad request.'))
-                content = b'HTTP/1.1 400 Bad request\r\n\r\n'
+            connPool.append(conn)
+            thread = threading.Thread(target=self.messageFunc, args=(conn,connPool,))
+            thread.setDaemon(True)
+            thread.start()
+
+    def messageFunc(self, conn, connPool):
+        request = str(conn.recv(1024),'utf-8')
+        import time
+        if self.debug == True: print(self.info.format(time = time.asctime(time.localtime(time.time())), type = 'Debug', info = str(request)))
+        try:
+            handShake = self.unpackHandshake(request)
+            message = self.message(handShake)
+            content = 'HTTP/1.1 {stateCode} {state}\r\nDate: {date}{others}\r\n\r\n'.format(stateCode = message['stateCode'], state = message['state'], date = message['date'], others = message['others'])
+            content = bytes(content, encoding='utf-8')
+            content = content + message['bodyMessage']
+        except: 
+            if self.debug == True: print(self.info.format(time = time.asctime(time.localtime(time.time())), type = 'Debug', info = 'Bad request.'))
+            content = b'HTTP/1.1 400 Bad request\r\n\r\n'
                 
-            conn.sendall(content)
-            if self.debug == True: print(self.info.format(time = time.asctime(time.localtime(time.time())), type = 'Debug', info = 'Message sended.'))
+        conn.sendall(content)
+        if self.debug == True: print(self.info.format(time = time.asctime(time.localtime(time.time())), type = 'Debug', info = 'Message sended.'))
+        conn.close()
+        connPool.remove(conn)
+        return
 
     def message(self, handShake):
         import time
