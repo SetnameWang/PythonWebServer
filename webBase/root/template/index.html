@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>欢迎来到[NAScloud]/Welcome to [NAScloud].</title>
+        <link rel="stylesheet" type="text/css" href="/css/index.css">
+    </head>
+    <body class="background">
+        <div class="front">
+            <p class="title">NAScloud</p>
+            <div class="splitLine" id="splitLine">
+            </div>
+            <p class="subTitle">Free your computer space</p>
+            <p class="loginTitle" id="loginBtn">Now Login</p>
+        </div>
+        
+        <script>
+            var loginBtn = document.getElementById('loginBtn');
+            loginBtn.addEventListener('click', displayFromW, false);
+            function displayFromW(){
+                document.getElementById('splitLine').style.width = '450px';
+                setTimeout("displayFromM()",350)
+            };
+            function displayFromM(){
+                document.getElementById('splitLine').style.margin = '8px auto';
+                document.getElementById("splitLine").style.opacity = "0.8";
+                document.getElementById("splitLine").style.filter = "alpha(opacity=80%)";
+                setTimeout("displayFromH()",150)
+            };
+            function displayFromH(){
+                document.getElementById('splitLine').style.height = '500px';
+            }
+        </script>
+    </body>
+</html>
